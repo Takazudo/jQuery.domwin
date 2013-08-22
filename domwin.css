@@ -1,0 +1,43 @@
+html,body{
+	margin:0;
+	padding:0;
+}
+.domwin-hideoverlay{
+	position:fixed;
+	text-align:left;
+	left:0;
+	top:0;
+	width:100%;
+	height:100%;
+	z-index:9999;
+	display:none;
+}
+	.domwin-hideoverlay-bg{
+		position:absolute;
+		left:0;
+		top:0;
+		width:100%;
+		height:100%;
+		z-index:9999;
+		background:#000;
+	}
+	.domwin-hideoverlay-spinner{
+		position:absolute;
+		left:50%;
+		top:50%;
+		width:200px;
+		height:200px;
+		margin:-100px 0 0 -100px;
+		background:url(spinner.gif) no-repeat 50% 50%;
+		z-index:10000;
+	}
+
+.domwin-dialog{
+	text-align:left;
+	position:fixed;
+	_position:absolute;
+	left:0;
+	top:0;
+	z-index:10001;
+	display:none;
+}

@@ -1,5 +1,5 @@
 /*! jQuery.domwin (https://github.com/Takazudo/jQuery.domwin)
- * lastupdate: 2013-08-20
+ * lastupdate: 2013-08-22
  * version: 0.0.0
  * author: 'Takazudo' Takeshi Takatsudo <takazudo@gmail.com>
  * License: MIT */
@@ -112,7 +112,136 @@
     ns.Hideoverlay = (function(_super) {
       __extends(Hideoverlay, _super);
 
-      function Hideoverlay() {}
+      Hideoverlay.prototype.defaults = {
+        src: "<div class=\"domwin-hideoverlay\">\n  <div class=\"domwin-hideoverlay-bg\"></div>\n  <div class=\"domwin-hideoverlay-spinner\"></div>\n</div>",
+        bg_spinner: true,
+        spinjs: false,
+        spinjs_options: {
+          color: '#fff',
+          lines: 15,
+          length: 22,
+          radius: 40
+        },
+        fade: true,
+        maxopacity: 0.8
+      };
+
+      function Hideoverlay(options) {
+        if (options == null) {
+          options = {};
+        }
+        this.options = $.extend({}, this.defaults, options);
+        this._createEl();
+        this._appendToPage();
+        this._handleSpinnerVis();
+      }
+
+      Hideoverlay.prototype.destroy = function() {
+        this.off();
+        this.$el.remove();
+        return this;
+      };
+
+      Hideoverlay.prototype.show = function() {
+        var animTo, cssTo, defer, onDone,
+          _this = this;
+        defer = $.Deferred();
+        this.$el.css('display', 'block');
+        cssTo = {
+          opacity: 0
+        };
+        animTo = {
+          opacity: this.options.maxopacity
+        };
+        this.$spinner.css('display', 'none');
+        this.trigger('beforeshow');
+        onDone = function() {
+          _this._attachSpin();
+          _this.trigger('aftershow');
+          return defer.resolve();
+        };
+        if (this.options.fade) {
+          ($.when(this.$bg.stop().css(cssTo).animate(animTo, 200))).done(onDone);
+        } else {
+          this.$bg.css(animTo);
+          onDone();
+        }
+        return defer.promise();
+      };
+
+      Hideoverlay.prototype.hide = function() {
+        var animTo, defer, onDone,
+          _this = this;
+        defer = $.Deferred();
+        animTo = {
+          opacity: 0
+        };
+        onDone = function() {
+          _this._removeSpin();
+          _this.$el.css('display', 'none');
+          _this.trigger('afterhide');
+          return defer.resolve();
+        };
+        this.trigger('beforehide');
+        if (this.options.fade) {
+          ($.when(this.$bg.stop().animate(animTo, 100))).done(onDone);
+        } else {
+          this.$bg.css(animTo);
+          onDone();
+        }
+        return defer.promise();
+      };
+
+      Hideoverlay.prototype._attachSpin = function() {
+        var shouldShow;
+        shouldShow = this.options.bg_spinner || this.options.spinjs;
+        if (shouldShow) {
+          this.$spinner.css('display', 'block');
+        }
+        if (this.options.spinjs) {
+          (new Spinner(this.options.spinjs_options)).spin(this.$spinner[0]);
+        }
+        if (shouldShow && this.options.fade) {
+          this.$spinner.hide().fadeIn();
+        }
+        return this;
+      };
+
+      Hideoverlay.prototype._removeSpin = function() {
+        if (this.options.spinjs === false) {
+          return this;
+        }
+        this.$spinner.empty();
+        return this;
+      };
+
+      Hideoverlay.prototype._appendToPage = function() {
+        $('body').append(this.$el);
+        return this;
+      };
+
+      Hideoverlay.prototype._createEl = function() {
+        this.$el = $(this.options.src);
+        this.$bg = $('.domwin-hideoverlay-bg', this.$el);
+        this.$spinner = $('.domwin-hideoverlay-spinner', this.$el);
+        return this;
+      };
+
+      Hideoverlay.prototype._handleSpinnerVis = function() {
+        var props, val;
+        val = null;
+        props = {};
+        if ((this.options.bg_spinner === false) && (this.options.spinjs === false)) {
+          props.display = 'none';
+        } else {
+          props.display = 'block';
+        }
+        if (this.options.spinjs === true) {
+          props.backgroundImage = 'none';
+        }
+        this.$spinner.css(props);
+        return this;
+      };
 
       return Hideoverlay;
 

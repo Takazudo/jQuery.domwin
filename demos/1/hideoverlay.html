@@ -1,0 +1,101 @@
+<!doctype html>
+<html class="no-js" lang="ja">
+<head>
+<meta charset="utf-8">
+<title></title>
+<meta name="viewport" content="width=device-width">
+<link rel="stylesheet" href="../../domwin.css">
+<link rel="stylesheet" href="styles.css">
+<script src="../../libs/jquery/1.10.2/jquery.js"></script>
+<script src="../../libs/spin.js"></script>
+<script src="../../EveEve/eveeve.js"></script>
+<script src="../../jquery.domwin.js"></script>
+<style>
+#buttons {
+	position:fixed;
+	left:0;
+	top:0;
+	padding:10px;
+	z-index:999999;
+
+}
+</style>
+<script>
+$(function() {
+	
+	var hideoverlay;
+
+	$('#test-new').click(function() {
+		if(hideoverlay) {
+			alert("you've already created one");
+			return;
+		}
+		hideoverlay = new $.DomwinNs.Hideoverlay;
+	});
+
+	$('#test-newWoSpinnerOff').click(function() {
+		if(hideoverlay) {
+			alert("you've already created one");
+			return;
+		}
+		hideoverlay = new $.DomwinNs.Hideoverlay({
+			bg_spinner: false
+		});
+	});
+
+	$('#test-newWSpinjs').click(function() {
+		if(hideoverlay) {
+			alert("you've already created one");
+			return;
+		}
+		hideoverlay = new $.DomwinNs.Hideoverlay({
+			bg_spinner: false,
+			spinjs: true
+		});
+	});
+
+	$('#test-destroy').click(function() {
+		if(!hideoverlay) {
+			alert('did you create instance?');
+			return;
+		}
+		hideoverlay.destroy();
+		hideoverlay = null;
+	});
+
+	$('#test-show').click(function() {
+		if(!hideoverlay) {
+			alert('did you create instance?');
+			return;
+		}
+		hideoverlay.show();
+	});
+
+	$('#test-hide').click(function() {
+		if(!hideoverlay) {
+			alert('did you create instance?');
+			return;
+		}
+		hideoverlay.hide();
+	});
+
+});
+</script>
+</head>
+<body>
+	<div id="buttons">
+		<div>
+			<button id="test-new">new</button>
+			<button id="test-newWoSpinnerOff">new w/o bg_spinner</button>
+			<button id="test-newWSpinjs">new w/ spinjs</button>
+		</div>
+		<div>
+			<button id="test-show">show()</button>
+			<button id="test-hide">hide()</button>
+		</div>
+		<div>
+			<button id="test-destroy">destroy</button>
+		</div>
+	</div>
+</body>
+</html>

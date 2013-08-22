@@ -98,7 +98,116 @@ do ($ = jQuery) ->
 
   class ns.Hideoverlay extends EveEve
 
-    constructor: ->
+    defaults:
+      src: """
+        <div class="domwin-hideoverlay">
+          <div class="domwin-hideoverlay-bg"></div>
+          <div class="domwin-hideoverlay-spinner"></div>
+        </div>
+      """
+      bg_spinner: true
+      spinjs: false
+      spinjs_options:
+        color:'#fff'
+        lines: 15
+        length: 22
+        radius: 40
+      fade: true
+      maxopacity: 0.8
+
+    constructor: (options = {}) ->
+      @options = $.extend {}, @defaults, options
+      @_createEl()
+      @_appendToPage()
+      @_handleSpinnerVis()
+
+    destroy: ->
+      @off()
+      @$el.remove()
+      return this
+
+    show: ->
+
+      defer = $.Deferred()
+      @$el.css 'display', 'block'
+      cssTo = { opacity: 0 }
+      animTo = { opacity: @options.maxopacity }
+      @$spinner.css 'display', 'none'
+
+      @trigger 'beforeshow'
+
+      onDone = =>
+        @_attachSpin()
+        @trigger 'aftershow'
+        defer.resolve()
+
+      if @options.fade
+        ($.when @$bg.stop().css(cssTo).animate(animTo, 200)).done onDone
+      else
+        @$bg.css(animTo)
+        onDone()
+
+      return defer.promise()
+
+    hide: ->
+
+      defer = $.Deferred()
+      animTo = { opacity: 0 }
+
+      onDone = =>
+        @_removeSpin()
+        @$el.css 'display', 'none'
+        @trigger 'afterhide'
+        defer.resolve()
+
+      @trigger 'beforehide'
+
+      if @options.fade
+        ($.when @$bg.stop().animate(animTo, 100)).done onDone
+      else
+        @$bg.css(animTo)
+        onDone()
+
+      return defer.promise()
+
+    # private
+    
+    _attachSpin: ->
+      shouldShow = @options.bg_spinner or @options.spinjs
+      if shouldShow
+        @$spinner.css 'display', 'block'
+      if @options.spinjs
+        (new Spinner @options.spinjs_options).spin(@$spinner[0])
+      if shouldShow and @options.fade
+        @$spinner.hide().fadeIn()
+      return this
+
+    _removeSpin: ->
+      return this if @options.spinjs is false
+      @$spinner.empty()
+      return this
+    
+    _appendToPage: ->
+      $('body').append @$el
+      return this
+    
+    _createEl: ->
+      @$el = $(@options.src)
+      @$bg = $('.domwin-hideoverlay-bg', @$el)
+      @$spinner = $('.domwin-hideoverlay-spinner', @$el)
+      return this
+
+    _handleSpinnerVis: ->
+      val = null
+      props = {}
+      if (@options.bg_spinner is false) and (@options.spinjs is false)
+        props.display = 'none'
+      else
+        props.display = 'block'
+      if @options.spinjs is true
+        props.backgroundImage = 'none'
+      @$spinner.css props
+      return this
 
   # ============================================================
   # class

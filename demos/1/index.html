@@ -4,14 +4,21 @@
 <meta charset="utf-8">
 <title></title>
 <meta name="viewport" content="width=device-width">
+<link rel="stylesheet" href="../../domwin.css">
 <link rel="stylesheet" href="styles.css">
 <script src="../../libs/jquery/1.10.2/jquery.js"></script>
 <script src="../../EveEve/eveeve.js"></script>
 <script src="../../jquery.domwin.js"></script>
 <script>
-console.log('hoge');
+$(function() {
+	var hideoverlay = new $.DomwinNs.Hideoverlay;
+});
 </script>
 </head>
 <body>
+	<button id="test-new">new</button>
+	<button id="test-appendToPage">appendToPage()</button>
+	<button id="test-show">show()</button>
+	<button id="test-hide">hide()</button>
 </body>
 </html>
