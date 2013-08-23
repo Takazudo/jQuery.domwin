@@ -31,9 +31,12 @@ module.exports = (grunt) ->
         src: [ 'jquery.domwin.coffee' ]
         dest: 'jquery.domwin.js'
 
-      test:
-        src: [ 'tests/test.coffee' ]
-        dest: 'tests/test.js'
+      test_common:
+        src: [ 'tests/mocha/common/test.coffee' ]
+        dest: 'tests/mocha/common/test.js'
+      test_hideoverlay:
+        src: [ 'tests/mocha/hideoverlay/test.coffee' ]
+        dest: 'tests/mocha/hideoverlay/test.js'
 
     concat:
 
@@ -52,32 +55,43 @@ module.exports = (grunt) ->
         dest: 'jquery.domwin.min.js'
 
     mocha:
+
+      all: [ 'tests/mocha/**/*.html' ]
       
-      test1:
-        src: [ 'tests/index.html' ]
-        bail: true
-        log: true
-        mocha:
-          ignoreLeaks: false
-        reporter: 'Nyan'
-        run: true
+      common:
+        src: [ 'tests/mocha/common/index.html' ]
+      hideoverlay:
+        src: [ 'tests/mocha/hideoverlay/index.html' ]
 
     watch:
 
       libself:
         files: [
           '<%= coffee.libself.src %>'
-          '<%= coffee.test.src %>'
         ]
         tasks: [
           'default'
+        ]
+
+      test_common:
+        files: [ '<%= coffee.test_common.src %>' ]
+        tasks: [
+          'coffee:test_common'
+          'mocha:common'
+        ]
+
+      test_hideoverlay:
+        files: [ '<%= coffee.test_hideoverlay.src %>' ]
+        tasks: [
+          'coffee:test_hideoverlay'
+          'mocha:hideoverlay'
         ]
 
   grunt.registerTask 'default', [
     'coffee'
     'concat'
     'uglify'
-    'mocha:test1'
+    'mocha:all'
     'growl:ok'
   ]
 
