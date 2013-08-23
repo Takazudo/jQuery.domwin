@@ -33,6 +33,16 @@ $(function() {
 		hideoverlay = new $.DomwinNs.Hideoverlay;
 	});
 
+	$('#test-newWoFade').click(function() {
+		if(hideoverlay) {
+			alert("you've already created one");
+			return;
+		}
+		hideoverlay = new $.DomwinNs.Hideoverlay({
+			fade: false
+		});
+	});
+
 	$('#test-newWoSpinnerOff').click(function() {
 		if(hideoverlay) {
 			alert("you've already created one");
@@ -86,6 +96,7 @@ $(function() {
 	<div id="buttons">
 		<div>
 			<button id="test-new">new</button>
+			<button id="test-newWoFade">new w/o fade</button>
 			<button id="test-newWoSpinnerOff">new w/o bg_spinner</button>
 			<button id="test-newWSpinjs">new w/ spinjs</button>
 		</div>

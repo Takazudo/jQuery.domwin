@@ -1,5 +1,5 @@
 /*! jQuery.domwin (https://github.com/Takazudo/jQuery.domwin)
- * lastupdate: 2013-08-22
+ * lastupdate: 2013-08-23
  * version: 0.0.0
  * author: 'Takazudo' Takeshi Takatsudo <takazudo@gmail.com>
  * License: MIT */
@@ -131,6 +131,7 @@
           options = {};
         }
         this.options = $.extend({}, this.defaults, options);
+        this._showDefer = null;
         this._createEl();
         this._appendToPage();
         this._handleSpinnerVis();
@@ -138,6 +139,7 @@
 
       Hideoverlay.prototype.destroy = function() {
         this.off();
+        this._removeSpin();
         this.$el.remove();
         return this;
       };
@@ -146,25 +148,34 @@
         var animTo, cssTo, defer, onDone,
           _this = this;
         defer = $.Deferred();
-        this.$el.css('display', 'block');
-        cssTo = {
-          opacity: 0
-        };
-        animTo = {
-          opacity: this.options.maxopacity
-        };
-        this.$spinner.css('display', 'none');
-        this.trigger('beforeshow');
-        onDone = function() {
-          _this._attachSpin();
-          _this.trigger('aftershow');
-          return defer.resolve();
-        };
-        if (this.options.fade) {
-          ($.when(this.$bg.stop().css(cssTo).animate(animTo, 200))).done(onDone);
+        if (this._showDefer) {
+          this.trigger('beforeshow');
+          this._showDefer.done(function() {
+            _this.trigger('aftershow');
+            return defer.resolve();
+          });
         } else {
-          this.$bg.css(animTo);
-          onDone();
+          this._showDefer = defer;
+          this.$el.css('display', 'block');
+          cssTo = {
+            opacity: 0
+          };
+          animTo = {
+            opacity: this.options.maxopacity
+          };
+          this.$spinner.css('display', 'none');
+          this.trigger('beforeshow');
+          onDone = function() {
+            _this._attachSpin();
+            _this.trigger('aftershow');
+            return defer.resolve();
+          };
+          if (this.options.fade) {
+            ($.when(this.$bg.stop().css(cssTo).animate(animTo, 200))).done(onDone);
+          } else {
+            this.$bg.css(animTo);
+            onDone();
+          }
         }
         return defer.promise();
       };
@@ -172,6 +183,7 @@
       Hideoverlay.prototype.hide = function() {
         var animTo, defer, onDone,
           _this = this;
+        this._showDefer = null;
         defer = $.Deferred();
         animTo = {
           opacity: 0
@@ -196,6 +208,7 @@
         var shouldShow;
         shouldShow = this.options.bg_spinner || this.options.spinjs;
         if (shouldShow) {
+          this._removeSpin();
           this.$spinner.css('display', 'block');
         }
         if (this.options.spinjs) {

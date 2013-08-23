@@ -65,10 +65,9 @@ describe 'ns.support', ->
 
 describe 'ns.Hideoverlay', ->
 
-  instance = null
-
   describe 'basics', ->
   
+    instance = null
     beforeEach ->
       options =
         fade: false
@@ -105,6 +104,8 @@ describe 'ns.Hideoverlay', ->
       (expect $overlay.is(':visible')).to.be false
     
   describe 'options.bg_spinner', ->
+
+    instance = null
     
     it "should shows spinner el when bg_spinner option is `true`", ->
       options =
@@ -123,6 +124,7 @@ describe 'ns.Hideoverlay', ->
 
   describe 'options.spinjs', ->
 
+    instance = null
     beforeEach ->
       options =
         bg_spinner: false
@@ -261,6 +263,356 @@ describe 'ns.Hideoverlay', ->
         instance.trigger 'beforeshow'
         instance.trigger 'aftershow'
         (expect spy.called).not.to.be true
+
+  describe "timing problems", ->
+
+    describe "sequential `show` call", ->
+
+      describe "when fade is false", ->
+
+        instance = null
+        beforeEach ->
+          options =
+            fade: false
+          instance = new $.DomwinNs.Hideoverlay options
+        afterEach ->
+          instance.destroy()
+          instance = null
+
+        it "should handle 2 `show` calls (deferred)", (done) ->
+          
+          spy1 = sinon.spy()
+          spy2 = sinon.spy()
+          instance.show().done ->
+            (expect spy2.calledOnce).to.be false
+            spy1()
+          instance.show().done ->
+            (expect spy1.calledOnce).to.be true
+            spy2()
+            done()
+        
+        it "should handle 4 `show` calls (deferred)", (done) ->
+          
+          spy1 = sinon.spy()
+          spy2 = sinon.spy()
+          spy3 = sinon.spy()
+          spy4 = sinon.spy()
+          instance.show().done ->
+            spy1()
+            (expect spy2.calledOnce).to.be false
+            (expect spy3.calledOnce).to.be false
+            (expect spy4.calledOnce).to.be false
+          instance.show().done ->
+            (expect spy1.calledOnce).to.be true
+            spy2()
+            (expect spy3.calledOnce).to.be false
+            (expect spy4.calledOnce).to.be false
+          instance.show().done ->
+            (expect spy1.calledOnce).to.be true
+            (expect spy2.calledOnce).to.be true
+            spy3()
+            (expect spy4.calledOnce).to.be false
+          instance.show().done ->
+            (expect spy1.calledOnce).to.be true
+            (expect spy2.calledOnce).to.be true
+            (expect spy3.calledOnce).to.be true
+            spy4()
+            done()
+
+        it "should handle 2 `show` calls (event)", (done) ->
+          
+          spy_before = sinon.spy()
+          spy_after = sinon.spy()
+          instance.on 'beforeshow', spy_before
+          instance.on 'aftershow', spy_after
+
+          $.when(
+            instance.show()
+            instance.show()
+          ).done ->
+            (expect spy_before.callCount).to.be 2
+            (expect spy_after.callCount).to.be 2
+            done()
+        
+        it "should handle 4 `show` calls (event)", (done) ->
+          
+          spy_before = sinon.spy()
+          spy_after = sinon.spy()
+          instance.on 'beforeshow', spy_before
+          instance.on 'aftershow', spy_after
+
+          $.when(
+            instance.show()
+            instance.show()
+            instance.show()
+            instance.show()
+          ).done ->
+            (expect spy_before.callCount).to.be 4
+            (expect spy_after.callCount).to.be 4
+            done()
+        
+      describe "when fade is true", ->
+
+        instance = null
+        beforeEach ->
+          options =
+            fade: true
+          instance = new $.DomwinNs.Hideoverlay options
+        afterEach ->
+          instance.destroy()
+          instance = null
+
+        it "should handle 2 `show` calls (deferred)", (done) ->
+          
+          spy1 = sinon.spy()
+          spy2 = sinon.spy()
+          instance.show().done ->
+            (expect spy2.calledOnce).to.be false
+            spy1()
+          instance.show().done ->
+            (expect spy1.calledOnce).to.be true
+            spy2()
+            done()
+        
+        it "should handle 4 `show` calls (deferred)", (done) ->
+          
+          spy1 = sinon.spy()
+          spy2 = sinon.spy()
+          spy3 = sinon.spy()
+          spy4 = sinon.spy()
+          instance.show().done ->
+            spy1()
+            (expect spy2.calledOnce).to.be false
+            (expect spy3.calledOnce).to.be false
+            (expect spy4.calledOnce).to.be false
+          instance.show().done ->
+            (expect spy1.calledOnce).to.be true
+            spy2()
+            (expect spy3.calledOnce).to.be false
+            (expect spy4.calledOnce).to.be false
+          instance.show().done ->
+            (expect spy1.calledOnce).to.be true
+            (expect spy2.calledOnce).to.be true
+            spy3()
+            (expect spy4.calledOnce).to.be false
+          instance.show().done ->
+            (expect spy1.calledOnce).to.be true
+            (expect spy2.calledOnce).to.be true
+            (expect spy3.calledOnce).to.be true
+            spy4()
+            done()
+
+        it "should handle 2 `show` calls (event)", (done) ->
+          
+          spy_before = sinon.spy()
+          spy_after = sinon.spy()
+          instance.on 'beforeshow', spy_before
+          instance.on 'aftershow', spy_after
+
+          $.when(
+            instance.show()
+            instance.show()
+          ).done ->
+            (expect spy_before.callCount).to.be 2
+            (expect spy_after.callCount).to.be 2
+            done()
+        
+        it "should handle 4 `show` calls (event)", (done) ->
+          
+          spy_before = sinon.spy()
+          spy_after = sinon.spy()
+          instance.on 'beforeshow', spy_before
+          instance.on 'aftershow', spy_after
+
+          $.when(
+            instance.show()
+            instance.show()
+            instance.show()
+            instance.show()
+          ).done ->
+            (expect spy_before.callCount).to.be 4
+            (expect spy_after.callCount).to.be 4
+            done()
+        
+    describe "sequential `hide` call", ->
+
+      describe "when fade is false", ->
+
+        instance = null
+        beforeEach ->
+          options =
+            fade: false
+          instance = new $.DomwinNs.Hideoverlay options
+        afterEach ->
+          instance.destroy()
+          instance = null
+
+        it "should handle 2 `hide` calls (deferred)", (done) ->
+
+          instance.show().done ->
+            spy1 = sinon.spy()
+            spy2 = sinon.spy()
+            instance.hide().done ->
+              (expect spy2.calledOnce).to.be false
+              spy1()
+            instance.hide().done ->
+              (expect spy1.calledOnce).to.be true
+              spy2()
+              done()
+        
+        it "should handle 4 `hide` calls (deferred)", (done) ->
+
+          instance.show().done ->
+            spy1 = sinon.spy()
+            spy2 = sinon.spy()
+            spy3 = sinon.spy()
+            spy4 = sinon.spy()
+            instance.hide().done ->
+              spy1()
+              (expect spy2.calledOnce).to.be false
+              (expect spy3.calledOnce).to.be false
+              (expect spy4.calledOnce).to.be false
+            instance.hide().done ->
+              (expect spy1.calledOnce).to.be true
+              spy2()
+              (expect spy3.calledOnce).to.be false
+              (expect spy4.calledOnce).to.be false
+            instance.hide().done ->
+              (expect spy1.calledOnce).to.be true
+              (expect spy2.calledOnce).to.be true
+              spy3()
+              (expect spy4.calledOnce).to.be false
+            instance.hide().done ->
+              (expect spy1.calledOnce).to.be true
+              (expect spy2.calledOnce).to.be true
+              (expect spy3.calledOnce).to.be true
+              spy4()
+              done()
+
+        it "should handle 2 `hide` calls (event)", (done) ->
+          
+          instance.show().done ->
+
+            spy_before = sinon.spy()
+            spy_after = sinon.spy()
+            instance.on 'beforehide', spy_before
+            instance.on 'afterhide', spy_after
+
+            $.when(
+              instance.hide()
+              instance.hide()
+            ).done ->
+              (expect spy_before.callCount).to.be 2
+              (expect spy_after.callCount).to.be 2
+              done()
+        
+        it "should handle 4 `hide` calls (event)", (done) ->
+          
+          instance.show().done ->
+
+            spy_before = sinon.spy()
+            spy_after = sinon.spy()
+            instance.on 'beforehide', spy_before
+            instance.on 'afterhide', spy_after
+
+            $.when(
+              instance.hide()
+              instance.hide()
+              instance.hide()
+              instance.hide()
+            ).done ->
+              (expect spy_before.callCount).to.be 4
+              (expect spy_after.callCount).to.be 4
+              done()
+        
+      describe "when fade is true", ->
+
+        instance = null
+        beforeEach ->
+          options =
+            fade: true
+          instance = new $.DomwinNs.Hideoverlay options
+        afterEach ->
+          instance.destroy()
+          instance = null
+
+        it "should handle 2 `hide` calls (deferred)", (done) ->
+          
+          instance.show().done ->
+            spy1 = sinon.spy()
+            spy2 = sinon.spy()
+            instance.hide().done ->
+              (expect spy2.calledOnce).to.be false
+              spy1()
+            instance.hide().done ->
+              (expect spy1.calledOnce).to.be true
+              spy2()
+              done()
+        
+        it "should handle 4 `hide` calls (deferred)", (done) ->
+          
+          instance.show().done ->
+            spy1 = sinon.spy()
+            spy2 = sinon.spy()
+            spy3 = sinon.spy()
+            spy4 = sinon.spy()
+            instance.hide().done ->
+              spy1()
+              (expect spy2.calledOnce).to.be false
+              (expect spy3.calledOnce).to.be false
+              (expect spy4.calledOnce).to.be false
+            instance.hide().done ->
+              (expect spy1.calledOnce).to.be true
+              spy2()
+              (expect spy3.calledOnce).to.be false
+              (expect spy4.calledOnce).to.be false
+            instance.hide().done ->
+              (expect spy1.calledOnce).to.be true
+              (expect spy2.calledOnce).to.be true
+              spy3()
+              (expect spy4.calledOnce).to.be false
+            instance.hide().done ->
+              (expect spy1.calledOnce).to.be true
+              (expect spy2.calledOnce).to.be true
+              (expect spy3.calledOnce).to.be true
+              spy4()
+              done()
+        
+        it "should handle 2 `hide` calls (event)", (done) ->
+          
+          instance.show().done ->
+
+            spy_before = sinon.spy()
+            spy_after = sinon.spy()
+            instance.on 'beforehide', spy_before
+            instance.on 'afterhide', spy_after
+
+            $.when(
+              instance.hide()
+              instance.hide()
+            ).done ->
+              (expect spy_before.callCount).to.be 2
+              (expect spy_after.callCount).to.be 2
+              done()
+        
+        it "should handle 4 `hide` calls (event)", (done) ->
+          
+          instance.show().done ->
+
+            spy_before = sinon.spy()
+            spy_after = sinon.spy()
+            instance.on 'beforehide', spy_before
+            instance.on 'afterhide', spy_after
+
+            $.when(
+              instance.hide()
+              instance.hide()
+              instance.hide()
+              instance.hide()
+            ).done ->
+              (expect spy_before.callCount).to.be 4
+              (expect spy_after.callCount).to.be 4
+              done()
 
 # ============================================================
 # jQuery.Domwin

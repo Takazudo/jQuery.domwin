@@ -61,9 +61,9 @@
   });
 
   describe('ns.Hideoverlay', function() {
-    var instance;
-    instance = null;
     describe('basics', function() {
+      var instance;
+      instance = null;
       beforeEach(function() {
         var options;
         options = {
@@ -108,6 +108,8 @@
       });
     });
     describe('options.bg_spinner', function() {
+      var instance;
+      instance = null;
       it("should shows spinner el when bg_spinner option is `true`", function() {
         var disp, options;
         options = {
@@ -129,6 +131,8 @@
       });
     });
     describe('options.spinjs', function() {
+      var instance;
+      instance = null;
       beforeEach(function() {
         var options;
         options = {
@@ -158,6 +162,7 @@
     });
     describe('options.fade', function() {
       describe('when true', function() {
+        var instance;
         instance = null;
         beforeEach(function() {
           var options;
@@ -182,6 +187,7 @@
         });
       });
       return describe('when false', function() {
+        var instance;
         instance = null;
         beforeEach(function() {
           var options;
@@ -206,8 +212,9 @@
         });
       });
     });
-    return describe('events', function() {
+    describe('events', function() {
       describe('with fade', function() {
+        var instance;
         instance = null;
         beforeEach(function() {
           var options;
@@ -246,6 +253,7 @@
         });
       });
       describe('without fade', function() {
+        var instance;
         instance = null;
         beforeEach(function() {
           var options;
@@ -281,7 +289,7 @@
       });
       return describe('zombie events', function() {
         return it('should not fire events after destroyed', function() {
-          var options, spy;
+          var instance, options, spy;
           options = {
             fade: false
           };
@@ -293,6 +301,368 @@
           instance.trigger('beforeshow');
           instance.trigger('aftershow');
           return (expect(spy.called)).not.to.be(true);
+        });
+      });
+    });
+    return describe("timing problems", function() {
+      describe("sequential `show` call", function() {
+        describe("when fade is false", function() {
+          var instance;
+          instance = null;
+          beforeEach(function() {
+            var options;
+            options = {
+              fade: false
+            };
+            return instance = new $.DomwinNs.Hideoverlay(options);
+          });
+          afterEach(function() {
+            instance.destroy();
+            return instance = null;
+          });
+          it("should handle 2 `show` calls (deferred)", function(done) {
+            var spy1, spy2;
+            spy1 = sinon.spy();
+            spy2 = sinon.spy();
+            instance.show().done(function() {
+              (expect(spy2.calledOnce)).to.be(false);
+              return spy1();
+            });
+            return instance.show().done(function() {
+              (expect(spy1.calledOnce)).to.be(true);
+              spy2();
+              return done();
+            });
+          });
+          it("should handle 4 `show` calls (deferred)", function(done) {
+            var spy1, spy2, spy3, spy4;
+            spy1 = sinon.spy();
+            spy2 = sinon.spy();
+            spy3 = sinon.spy();
+            spy4 = sinon.spy();
+            instance.show().done(function() {
+              spy1();
+              (expect(spy2.calledOnce)).to.be(false);
+              (expect(spy3.calledOnce)).to.be(false);
+              return (expect(spy4.calledOnce)).to.be(false);
+            });
+            instance.show().done(function() {
+              (expect(spy1.calledOnce)).to.be(true);
+              spy2();
+              (expect(spy3.calledOnce)).to.be(false);
+              return (expect(spy4.calledOnce)).to.be(false);
+            });
+            instance.show().done(function() {
+              (expect(spy1.calledOnce)).to.be(true);
+              (expect(spy2.calledOnce)).to.be(true);
+              spy3();
+              return (expect(spy4.calledOnce)).to.be(false);
+            });
+            return instance.show().done(function() {
+              (expect(spy1.calledOnce)).to.be(true);
+              (expect(spy2.calledOnce)).to.be(true);
+              (expect(spy3.calledOnce)).to.be(true);
+              spy4();
+              return done();
+            });
+          });
+          it("should handle 2 `show` calls (event)", function(done) {
+            var spy_after, spy_before;
+            spy_before = sinon.spy();
+            spy_after = sinon.spy();
+            instance.on('beforeshow', spy_before);
+            instance.on('aftershow', spy_after);
+            return $.when(instance.show(), instance.show()).done(function() {
+              (expect(spy_before.callCount)).to.be(2);
+              (expect(spy_after.callCount)).to.be(2);
+              return done();
+            });
+          });
+          return it("should handle 4 `show` calls (event)", function(done) {
+            var spy_after, spy_before;
+            spy_before = sinon.spy();
+            spy_after = sinon.spy();
+            instance.on('beforeshow', spy_before);
+            instance.on('aftershow', spy_after);
+            return $.when(instance.show(), instance.show(), instance.show(), instance.show()).done(function() {
+              (expect(spy_before.callCount)).to.be(4);
+              (expect(spy_after.callCount)).to.be(4);
+              return done();
+            });
+          });
+        });
+        return describe("when fade is true", function() {
+          var instance;
+          instance = null;
+          beforeEach(function() {
+            var options;
+            options = {
+              fade: true
+            };
+            return instance = new $.DomwinNs.Hideoverlay(options);
+          });
+          afterEach(function() {
+            instance.destroy();
+            return instance = null;
+          });
+          it("should handle 2 `show` calls (deferred)", function(done) {
+            var spy1, spy2;
+            spy1 = sinon.spy();
+            spy2 = sinon.spy();
+            instance.show().done(function() {
+              (expect(spy2.calledOnce)).to.be(false);
+              return spy1();
+            });
+            return instance.show().done(function() {
+              (expect(spy1.calledOnce)).to.be(true);
+              spy2();
+              return done();
+            });
+          });
+          it("should handle 4 `show` calls (deferred)", function(done) {
+            var spy1, spy2, spy3, spy4;
+            spy1 = sinon.spy();
+            spy2 = sinon.spy();
+            spy3 = sinon.spy();
+            spy4 = sinon.spy();
+            instance.show().done(function() {
+              spy1();
+              (expect(spy2.calledOnce)).to.be(false);
+              (expect(spy3.calledOnce)).to.be(false);
+              return (expect(spy4.calledOnce)).to.be(false);
+            });
+            instance.show().done(function() {
+              (expect(spy1.calledOnce)).to.be(true);
+              spy2();
+              (expect(spy3.calledOnce)).to.be(false);
+              return (expect(spy4.calledOnce)).to.be(false);
+            });
+            instance.show().done(function() {
+              (expect(spy1.calledOnce)).to.be(true);
+              (expect(spy2.calledOnce)).to.be(true);
+              spy3();
+              return (expect(spy4.calledOnce)).to.be(false);
+            });
+            return instance.show().done(function() {
+              (expect(spy1.calledOnce)).to.be(true);
+              (expect(spy2.calledOnce)).to.be(true);
+              (expect(spy3.calledOnce)).to.be(true);
+              spy4();
+              return done();
+            });
+          });
+          it("should handle 2 `show` calls (event)", function(done) {
+            var spy_after, spy_before;
+            spy_before = sinon.spy();
+            spy_after = sinon.spy();
+            instance.on('beforeshow', spy_before);
+            instance.on('aftershow', spy_after);
+            return $.when(instance.show(), instance.show()).done(function() {
+              (expect(spy_before.callCount)).to.be(2);
+              (expect(spy_after.callCount)).to.be(2);
+              return done();
+            });
+          });
+          return it("should handle 4 `show` calls (event)", function(done) {
+            var spy_after, spy_before;
+            spy_before = sinon.spy();
+            spy_after = sinon.spy();
+            instance.on('beforeshow', spy_before);
+            instance.on('aftershow', spy_after);
+            return $.when(instance.show(), instance.show(), instance.show(), instance.show()).done(function() {
+              (expect(spy_before.callCount)).to.be(4);
+              (expect(spy_after.callCount)).to.be(4);
+              return done();
+            });
+          });
+        });
+      });
+      return describe("sequential `hide` call", function() {
+        describe("when fade is false", function() {
+          var instance;
+          instance = null;
+          beforeEach(function() {
+            var options;
+            options = {
+              fade: false
+            };
+            return instance = new $.DomwinNs.Hideoverlay(options);
+          });
+          afterEach(function() {
+            instance.destroy();
+            return instance = null;
+          });
+          it("should handle 2 `hide` calls (deferred)", function(done) {
+            return instance.show().done(function() {
+              var spy1, spy2;
+              spy1 = sinon.spy();
+              spy2 = sinon.spy();
+              instance.hide().done(function() {
+                (expect(spy2.calledOnce)).to.be(false);
+                return spy1();
+              });
+              return instance.hide().done(function() {
+                (expect(spy1.calledOnce)).to.be(true);
+                spy2();
+                return done();
+              });
+            });
+          });
+          it("should handle 4 `hide` calls (deferred)", function(done) {
+            return instance.show().done(function() {
+              var spy1, spy2, spy3, spy4;
+              spy1 = sinon.spy();
+              spy2 = sinon.spy();
+              spy3 = sinon.spy();
+              spy4 = sinon.spy();
+              instance.hide().done(function() {
+                spy1();
+                (expect(spy2.calledOnce)).to.be(false);
+                (expect(spy3.calledOnce)).to.be(false);
+                return (expect(spy4.calledOnce)).to.be(false);
+              });
+              instance.hide().done(function() {
+                (expect(spy1.calledOnce)).to.be(true);
+                spy2();
+                (expect(spy3.calledOnce)).to.be(false);
+                return (expect(spy4.calledOnce)).to.be(false);
+              });
+              instance.hide().done(function() {
+                (expect(spy1.calledOnce)).to.be(true);
+                (expect(spy2.calledOnce)).to.be(true);
+                spy3();
+                return (expect(spy4.calledOnce)).to.be(false);
+              });
+              return instance.hide().done(function() {
+                (expect(spy1.calledOnce)).to.be(true);
+                (expect(spy2.calledOnce)).to.be(true);
+                (expect(spy3.calledOnce)).to.be(true);
+                spy4();
+                return done();
+              });
+            });
+          });
+          it("should handle 2 `hide` calls (event)", function(done) {
+            return instance.show().done(function() {
+              var spy_after, spy_before;
+              spy_before = sinon.spy();
+              spy_after = sinon.spy();
+              instance.on('beforehide', spy_before);
+              instance.on('afterhide', spy_after);
+              return $.when(instance.hide(), instance.hide()).done(function() {
+                (expect(spy_before.callCount)).to.be(2);
+                (expect(spy_after.callCount)).to.be(2);
+                return done();
+              });
+            });
+          });
+          return it("should handle 4 `hide` calls (event)", function(done) {
+            return instance.show().done(function() {
+              var spy_after, spy_before;
+              spy_before = sinon.spy();
+              spy_after = sinon.spy();
+              instance.on('beforehide', spy_before);
+              instance.on('afterhide', spy_after);
+              return $.when(instance.hide(), instance.hide(), instance.hide(), instance.hide()).done(function() {
+                (expect(spy_before.callCount)).to.be(4);
+                (expect(spy_after.callCount)).to.be(4);
+                return done();
+              });
+            });
+          });
+        });
+        return describe("when fade is true", function() {
+          var instance;
+          instance = null;
+          beforeEach(function() {
+            var options;
+            options = {
+              fade: true
+            };
+            return instance = new $.DomwinNs.Hideoverlay(options);
+          });
+          afterEach(function() {
+            instance.destroy();
+            return instance = null;
+          });
+          it("should handle 2 `hide` calls (deferred)", function(done) {
+            return instance.show().done(function() {
+              var spy1, spy2;
+              spy1 = sinon.spy();
+              spy2 = sinon.spy();
+              instance.hide().done(function() {
+                (expect(spy2.calledOnce)).to.be(false);
+                return spy1();
+              });
+              return instance.hide().done(function() {
+                (expect(spy1.calledOnce)).to.be(true);
+                spy2();
+                return done();
+              });
+            });
+          });
+          it("should handle 4 `hide` calls (deferred)", function(done) {
+            return instance.show().done(function() {
+              var spy1, spy2, spy3, spy4;
+              spy1 = sinon.spy();
+              spy2 = sinon.spy();
+              spy3 = sinon.spy();
+              spy4 = sinon.spy();
+              instance.hide().done(function() {
+                spy1();
+                (expect(spy2.calledOnce)).to.be(false);
+                (expect(spy3.calledOnce)).to.be(false);
+                return (expect(spy4.calledOnce)).to.be(false);
+              });
+              instance.hide().done(function() {
+                (expect(spy1.calledOnce)).to.be(true);
+                spy2();
+                (expect(spy3.calledOnce)).to.be(false);
+                return (expect(spy4.calledOnce)).to.be(false);
+              });
+              instance.hide().done(function() {
+                (expect(spy1.calledOnce)).to.be(true);
+                (expect(spy2.calledOnce)).to.be(true);
+                spy3();
+                return (expect(spy4.calledOnce)).to.be(false);
+              });
+              return instance.hide().done(function() {
+                (expect(spy1.calledOnce)).to.be(true);
+                (expect(spy2.calledOnce)).to.be(true);
+                (expect(spy3.calledOnce)).to.be(true);
+                spy4();
+                return done();
+              });
+            });
+          });
+          it("should handle 2 `hide` calls (event)", function(done) {
+            return instance.show().done(function() {
+              var spy_after, spy_before;
+              spy_before = sinon.spy();
+              spy_after = sinon.spy();
+              instance.on('beforehide', spy_before);
+              instance.on('afterhide', spy_after);
+              return $.when(instance.hide(), instance.hide()).done(function() {
+                (expect(spy_before.callCount)).to.be(2);
+                (expect(spy_after.callCount)).to.be(2);
+                return done();
+              });
+            });
+          });
+          return it("should handle 4 `hide` calls (event)", function(done) {
+            return instance.show().done(function() {
+              var spy_after, spy_before;
+              spy_before = sinon.spy();
+              spy_after = sinon.spy();
+              instance.on('beforehide', spy_before);
+              instance.on('afterhide', spy_after);
+              return $.when(instance.hide(), instance.hide(), instance.hide(), instance.hide()).done(function() {
+                (expect(spy_before.callCount)).to.be(4);
+                (expect(spy_after.callCount)).to.be(4);
+                return done();
+              });
+            });
+          });
         });
       });
     });

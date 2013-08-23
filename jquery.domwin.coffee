@@ -117,39 +117,64 @@ do ($ = jQuery) ->
 
     constructor: (options = {}) ->
       @options = $.extend {}, @defaults, options
+
+      @_showDefer = null
+      # stores show deferred object.
+      # If there's a deferred here, it means
+      # show is in progress or already shown.
+      # This property will be null when `hide` was called.
+
       @_createEl()
       @_appendToPage()
       @_handleSpinnerVis()
 
     destroy: ->
       @off()
+      @_removeSpin()
       @$el.remove()
       return this
 
     show: ->
 
       defer = $.Deferred()
-      @$el.css 'display', 'block'
-      cssTo = { opacity: 0 }
-      animTo = { opacity: @options.maxopacity }
-      @$spinner.css 'display', 'none'
 
-      @trigger 'beforeshow'
+      if @_showDefer
+        # if there's a deferred, we don't need animations at all.
 
-      onDone = =>
-        @_attachSpin()
-        @trigger 'aftershow'
-        defer.resolve()
+        @trigger 'beforeshow'
 
-      if @options.fade
-        ($.when @$bg.stop().css(cssTo).animate(animTo, 200)).done onDone
+        @_showDefer.done =>
+          # last animation is what we should watch
+          @trigger 'aftershow'
+          defer.resolve()
+
       else
-        @$bg.css(animTo)
-        onDone()
+
+        @_showDefer = defer # store current show deferred
+
+        @$el.css 'display', 'block'
+        cssTo = { opacity: 0 }
+        animTo = { opacity: @options.maxopacity }
+        @$spinner.css 'display', 'none'
+
+        @trigger 'beforeshow'
+
+        onDone = =>
+          @_attachSpin()
+          @trigger 'aftershow'
+          defer.resolve()
+
+        if @options.fade
+          ($.when @$bg.stop().css(cssTo).animate(animTo, 200)).done onDone
+        else
+          @$bg.css(animTo)
+          onDone()
 
       return defer.promise()
 
     hide: ->
+
+      @_showDefer = null
 
       defer = $.Deferred()
       animTo = { opacity: 0 }
@@ -175,6 +200,7 @@ do ($ = jQuery) ->
     _attachSpin: ->
       shouldShow = @options.bg_spinner or @options.spinjs
       if shouldShow
+        @_removeSpin()
         @$spinner.css 'display', 'block'
       if @options.spinjs
         (new Spinner @options.spinjs_options).spin(@$spinner[0])
@@ -224,3 +250,4 @@ do ($ = jQuery) ->
 
   $.DomwinNs = ns
   $.Domwin = ns.Main
+
