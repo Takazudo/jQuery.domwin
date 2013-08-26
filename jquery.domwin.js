@@ -1,5 +1,5 @@
 /*! jQuery.domwin (https://github.com/Takazudo/jQuery.domwin)
- * lastupdate: 2013-08-23
+ * lastupdate: 2013-08-26
  * version: 0.0.0
  * author: 'Takazudo' Takeshi Takatsudo <takazudo@gmail.com>
  * License: MIT */
@@ -44,7 +44,7 @@
     ns.util.isBlackListedMobile = function() {
       var cache;
       cache = null;
-      function fixedPosition() {
+      function blackListed() {
       var w = window,
         ua = navigator.userAgent,
         platform = navigator.platform,
@@ -76,7 +76,7 @@
       return true;
     };
       if (cache == null) {
-        cache = fixedPosition();
+        cache = !blackListed();
       }
       return cache;
     };
@@ -109,12 +109,31 @@
       }
       return cache;
     };
+    ns.Winwatcher = (function(_super) {
+      var eventNames;
+
+      __extends(Winwatcher, _super);
+
+      eventNames = 'resize scroll orientationchange';
+
+      function Winwatcher() {
+        var _this = this;
+        $win.bind(eventNames, function() {
+          return _this.trigger('resize');
+        });
+      }
+
+      return Winwatcher;
+
+    })(EveEve);
+    ns.winwatcher = new ns.Winwatcher;
     ns.Hideoverlay = (function(_super) {
       __extends(Hideoverlay, _super);
 
       Hideoverlay.prototype.defaults = {
         src: "<div class=\"domwin-hideoverlay\">\n  <div class=\"domwin-hideoverlay-bg\"></div>\n  <div class=\"domwin-hideoverlay-spinner\"></div>\n</div>",
         bg_spinner: true,
+        bg_spinner_url: null,
         spinjs: false,
         spinjs_options: {
           color: '#fff',
@@ -123,7 +142,10 @@
           radius: 40
         },
         fade: true,
-        maxopacity: 0.8
+        maxopacity: 0.8,
+        click_close: true,
+        position: ns.support.fixed() ? 'fixed' : 'absolute',
+        bgiframe: false
       };
 
       function Hideoverlay(options) {
@@ -132,12 +154,17 @@
         }
         this.options = $.extend({}, this.defaults, options);
         this._showDefer = null;
+        this._shouldHandleResizeNow = false;
         this._createEl();
         this._appendToPage();
         this._handleSpinnerVis();
+        this._handleAbsolute();
+        this._eventify();
+        this._preloadSpinner();
       }
 
       Hideoverlay.prototype.destroy = function() {
+        this._offEventsOnDom();
         this.off();
         this._removeSpin();
         this.$el.remove();
@@ -170,6 +197,8 @@
             _this.trigger('aftershow');
             return defer.resolve();
           };
+          this._shouldHandleResizeNow = true;
+          this._resize();
           if (this.options.fade) {
             ($.when(this.$bg.stop().css(cssTo).animate(animTo, 200))).done(onDone);
           } else {
@@ -190,6 +219,7 @@
         };
         onDone = function() {
           _this._removeSpin();
+          _this._shouldHandleResizeNow = false;
           _this.$el.css('display', 'none');
           _this.trigger('afterhide');
           return defer.resolve();
@@ -253,6 +283,79 @@
           props.backgroundImage = 'none';
         }
         this.$spinner.css(props);
+        return this;
+      };
+
+      Hideoverlay.prototype._eventify = function() {
+        var _this = this;
+        if (this.options.click_close === true) {
+          this._clickHandler = function(e) {
+            e.preventDefault();
+            return _this.hide();
+          };
+          this.$el.bind('click', this._clickHandler);
+        }
+        if (this.options.position === 'absolute') {
+          this._resizeHandler = function() {
+            if (!_this._shouldHandleResizeNow) {
+              return;
+            }
+            return _this._resize();
+          };
+          ns.winwatcher.on('resize', this._resizeHandler);
+        }
+        return this;
+      };
+
+      Hideoverlay.prototype._offEventsOnDom = function() {
+        if (this._clickHandler) {
+          this.$el.unbind('click', this._clickHandler);
+        }
+        if (this._resizeHandler) {
+          ns.winwatcher.off('resize', this._resizeHandler);
+        }
+        return this;
+      };
+
+      Hideoverlay.prototype._preloadSpinner = function() {
+        var url;
+        url = this.options.bg_spinner_url;
+        if (!url) {
+          return;
+        }
+        (new Image).src = url;
+        return this;
+      };
+
+      Hideoverlay.prototype._handleAbsolute = function() {
+        if (this.options.position !== 'absolute') {
+          return this;
+        }
+        this.$el.css('position', 'absolute');
+        if (this.options.bgiframe && $.fn.bgiframe) {
+          this.$el.bgiframe();
+        }
+        return this;
+      };
+
+      Hideoverlay.prototype._resize = function() {
+        var h, w;
+        if (this.options.position !== 'absolute') {
+          return this;
+        }
+        w = viewportW();
+        h = viewportH();
+        this.$el.css({
+          width: w,
+          height: h,
+          top: $win.scrollTop(),
+          left: $win.scrollLeft()
+        });
+        this.$bg.css({
+          width: w,
+          height: h
+        });
+        this.trigger('resize');
         return this;
       };
 

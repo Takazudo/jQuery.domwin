@@ -1,4 +1,14 @@
 (function() {
+  var wait;
+
+  wait = function(time) {
+    return $.Deferred(function(defer) {
+      return setTimeout(function() {
+        return defer.resolve();
+      }, time);
+    });
+  };
+
   describe('basics', function() {
     var instance;
     instance = null;
@@ -605,6 +615,126 @@
               return done();
             });
           });
+        });
+      });
+    });
+  });
+
+  describe("click to close feature", function() {
+    var instance;
+    instance = null;
+    afterEach(function() {
+      instance.destroy();
+      return instance = null;
+    });
+    it("shold close self when it was clicked (click_close: true)", function(done) {
+      var options, spy_after, spy_before;
+      options = {
+        click_close: true
+      };
+      instance = new $.DomwinNs.Hideoverlay(options);
+      spy_before = sinon.spy();
+      spy_after = sinon.spy();
+      instance.on('beforehide', spy_before);
+      instance.on('afterhide', spy_after);
+      instance.show();
+      (wait(10)).done(function() {
+        return instance.$el.click();
+      });
+      return (wait(1000)).done(function() {
+        (expect(spy_before.calledOnce)).to.be(true);
+        (expect(spy_after.calledOnce)).to.be(true);
+        return done();
+      });
+    });
+    return it("shold not close self when it was clicked (click_close: false)", function(done) {
+      var options, spy_after, spy_before;
+      options = {
+        click_close: false
+      };
+      instance = new $.DomwinNs.Hideoverlay(options);
+      spy_before = sinon.spy();
+      spy_after = sinon.spy();
+      instance.on('beforehide', spy_before);
+      instance.on('afterhide', spy_after);
+      instance.show();
+      (wait(10)).done(function() {
+        return instance.$el.click();
+      });
+      return (wait(1000)).done(function() {
+        (expect(spy_before.calledOnce)).to.be(false);
+        (expect(spy_after.calledOnce)).to.be(false);
+        return done();
+      });
+    });
+  });
+
+  describe("position absolute feature", function() {
+    return describe("when 'absolute'", function() {
+      var instance;
+      instance = null;
+      beforeEach(function() {
+        var options;
+        options = {
+          position: 'absolute'
+        };
+        return instance = new $.DomwinNs.Hideoverlay(options);
+      });
+      it("should fire resize event when window was resized", function(done) {
+        var spy;
+        spy = sinon.spy();
+        instance.on('resize', spy);
+        return instance.show().then(function() {
+          (expect(spy.callCount)).to.be(1);
+          $(window).resize();
+          return wait(10);
+        }).then(function() {
+          (expect(spy.callCount)).to.be(2);
+          instance.destroy();
+          instance = null;
+          return done();
+        });
+      });
+      it("should not fire resize event after destroyed", function(done) {
+        var spy;
+        spy = sinon.spy();
+        instance.on('resize', spy);
+        return instance.show().then(function() {
+          (expect(spy.callCount)).to.be(1);
+          $(window).resize();
+          return wait(10);
+        }).then(function() {
+          (expect(spy.callCount)).to.be(2);
+          instance.destroy();
+          instance = null;
+          $(window).resize();
+          return wait(10);
+        }).then(function() {
+          (expect(spy.callCount)).to.be(2);
+          return done();
+        });
+      });
+      it("should not fire resize event before shown", function() {
+        var spy;
+        spy = sinon.spy();
+        instance.on('resize', spy);
+        $(window).resize();
+        return (expect(spy.callCount)).to.be(0);
+      });
+      return it("should not fire resize event after hidden", function(done) {
+        return instance.show().then(function() {
+          return wait(10);
+        }).then(function() {
+          return instance.hide();
+        }).then(function() {
+          return wait(10);
+        }).then(function() {
+          var spy;
+          spy = sinon.spy();
+          instance.on('resize', spy);
+          $(window).resize();
+          (expect(spy.callCount)).to.be(0);
+          return done();
         });
       });
     });

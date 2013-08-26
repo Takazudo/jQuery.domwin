@@ -1,3 +1,10 @@
+# tiny util
+wait = (time) ->
+  return $.Deferred (defer) ->
+    setTimeout ->
+      defer.resolve()
+    , time
+
 describe 'basics', ->
 
   instance = null
@@ -547,3 +554,107 @@ describe "timing problems", ->
             (expect spy_after.callCount).to.be 4
             done()
 
+describe "click to close feature", ->
+
+  instance = null
+  afterEach ->
+    instance.destroy()
+    instance = null
+
+  it "shold close self when it was clicked (click_close: true)", (done) ->
+
+    options =
+      click_close: true
+    instance = new $.DomwinNs.Hideoverlay options
+
+    spy_before = sinon.spy()
+    spy_after = sinon.spy()
+    instance.on 'beforehide', spy_before
+    instance.on 'afterhide', spy_after
+    instance.show()
+
+    (wait 10).done ->
+      instance.$el.click()
+    (wait 1000).done ->
+      (expect spy_before.calledOnce).to.be true
+      (expect spy_after.calledOnce).to.be true
+      done()
+
+  it "shold not close self when it was clicked (click_close: false)", (done) ->
+
+    options =
+      click_close: false
+    instance = new $.DomwinNs.Hideoverlay options
+
+    spy_before = sinon.spy()
+    spy_after = sinon.spy()
+    instance.on 'beforehide', spy_before
+    instance.on 'afterhide', spy_after
+    instance.show()
+
+    (wait 10).done ->
+      instance.$el.click()
+    (wait 1000).done ->
+      (expect spy_before.calledOnce).to.be false
+      (expect spy_after.calledOnce).to.be false
+      done()
+
+describe "position absolute feature", ->
+  
+  describe "when 'absolute'", ->
+
+    instance = null
+    beforeEach ->
+      options =
+        position: 'absolute'
+      instance = new $.DomwinNs.Hideoverlay options
+    
+    it "should fire resize event when window was resized", (done) ->
+      spy = sinon.spy()
+      instance.on 'resize', spy
+      instance.show().then ->
+        (expect spy.callCount).to.be 1
+        $(window).resize()
+        return wait 10
+      .then ->
+        (expect spy.callCount).to.be 2
+        instance.destroy()
+        instance = null
+        done()
+
+    it "should not fire resize event after destroyed", (done) ->
+      spy = sinon.spy()
+      instance.on 'resize', spy
+      instance.show().then ->
+        (expect spy.callCount).to.be 1
+        $(window).resize()
+        return wait 10
+      .then ->
+        (expect spy.callCount).to.be 2
+        instance.destroy()
+        instance = null
+        $(window).resize()
+        return wait 10
+      .then ->
+        (expect spy.callCount).to.be 2
+        done()
+
+    it "should not fire resize event before shown", ->
+      spy = sinon.spy()
+      instance.on 'resize', spy
+      $(window).resize()
+      (expect spy.callCount).to.be 0
+
+    it "should not fire resize event after hidden", (done) ->
+      instance.show().then ->
+        return wait 10
+      .then ->
+        return instance.hide()
+      .then ->
+        return wait 10
+      .then ->
+        spy = sinon.spy()
+        instance.on 'resize', spy
+        $(window).resize()
+        (expect spy.callCount).to.be 0
+        done()

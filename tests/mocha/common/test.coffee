@@ -1,3 +1,10 @@
+# tiny util
+wait = (time) ->
+  return $.Deferred (defer) ->
+    setTimeout ->
+      defer.resolve()
+    , time
+
 # ============================================================
 # common
 
@@ -59,4 +66,27 @@ describe 'ns.support', ->
       (expect res2).to.be.a 'boolean'
       (expect res1).to.be res2
 
+# ============================================================
+# winwatcher
+
+describe 'ns.winwatcher', ->
+
+  ns = $.DomwinNs
+
+  it "should have Winwatcher instance on namespace", ->
+    (expect ns.winwatcher?).to.be true
+
+  it "should fire `resize` event on window's resize", ->
+    spy = sinon.spy()
+    ns.winwatcher.on 'resize', spy
+    $(window).resize()
+    (expect spy.calledOnce).to.be true
+
+  it "should not invoke already offed callbacks", ->
+    spy = sinon.spy()
+    ns.winwatcher.on 'resize', spy
+    $(window).resize()
+    ns.winwatcher.off 'resize', spy
+    $(window).resize()
+    (expect spy.calledOnce).to.be true
 

@@ -40,7 +40,7 @@ do ($ = jQuery) ->
 
   ns.util.isBlackListedMobile = ->
     cache = null
-    `function fixedPosition() {
+    `function blackListed() {
       var w = window,
         ua = navigator.userAgent,
         platform = navigator.platform,
@@ -72,7 +72,7 @@ do ($ = jQuery) ->
       return true;
     }`
     unless cache?
-      cache = fixedPosition()
+      cache = not blackListed()
     return cache
 
   viewportH = ns.util.viewportH = -> win.innerHeight or doc.documentElement.clientHeight or doc.body.clientHeight
@@ -94,6 +94,18 @@ do ($ = jQuery) ->
     return cache
 
   # ============================================================
+  # Winwatcher
+
+  class ns.Winwatcher extends EveEve
+    eventNames = 'resize scroll orientationchange'
+    constructor: ->
+      $win.bind eventNames, =>
+        @trigger 'resize'
+
+  # put instance under namespace
+  ns.winwatcher = new ns.Winwatcher
+
+  # ============================================================
   # Hideoverlay
 
   class ns.Hideoverlay extends EveEve
@@ -106,6 +118,7 @@ do ($ = jQuery) ->
         </div>
       """
       bg_spinner: true
+      bg_spinner_url: null
       spinjs: false
       spinjs_options:
         color:'#fff'
@@ -114,6 +127,9 @@ do ($ = jQuery) ->
         radius: 40
       fade: true
       maxopacity: 0.8
+      click_close: true
+      position: if ns.support.fixed() then 'fixed' else 'absolute'
+      bgiframe: false
 
     constructor: (options = {}) ->
       @options = $.extend {}, @defaults, options
@@ -123,12 +139,18 @@ do ($ = jQuery) ->
       # If there's a deferred here, it means
       # show is in progress or already shown.
       # This property will be null when `hide` was called.
+      
+      @_shouldHandleResizeNow = false
 
       @_createEl()
       @_appendToPage()
       @_handleSpinnerVis()
+      @_handleAbsolute()
+      @_eventify()
+      @_preloadSpinner()
 
     destroy: ->
+      @_offEventsOnDom()
       @off()
       @_removeSpin()
       @$el.remove()
@@ -164,6 +186,9 @@ do ($ = jQuery) ->
           @trigger 'aftershow'
           defer.resolve()
 
+        @_shouldHandleResizeNow = true
+        @_resize()
+
         if @options.fade
           ($.when @$bg.stop().css(cssTo).animate(animTo, 200)).done onDone
         else
@@ -181,6 +206,7 @@ do ($ = jQuery) ->
 
       onDone = =>
         @_removeSpin()
+        @_shouldHandleResizeNow = false
         @$el.css 'display', 'none'
         @trigger 'afterhide'
         defer.resolve()
@@ -233,6 +259,57 @@ do ($ = jQuery) ->
       if @options.spinjs is true
         props.backgroundImage = 'none'
       @$spinner.css props
+      return this
+
+    _eventify: ->
+
+      if @options.click_close is true
+        @_clickHandler = (e) =>
+          e.preventDefault()
+          @hide()
+        @$el.bind 'click', @_clickHandler
+
+      if @options.position is 'absolute'
+        @_resizeHandler = =>
+          return unless @_shouldHandleResizeNow
+          @_resize()
+        ns.winwatcher.on 'resize', @_resizeHandler
+
+      return this
+
+    _offEventsOnDom: ->
+      if @_clickHandler
+        @$el.unbind 'click', @_clickHandler
+      if @_resizeHandler
+        ns.winwatcher.off 'resize', @_resizeHandler
+      return this
+
+    _preloadSpinner: ->
+      url = @options.bg_spinner_url
+      return unless url
+      (new Image).src = url
+      return this
+
+    _handleAbsolute: ->
+      return this unless @options.position is 'absolute'
+      @$el.css 'position', 'absolute'
+      if @options.bgiframe and $.fn.bgiframe
+        @$el.bgiframe()
+      return this
+
+    _resize: ->
+      return this unless @options.position is 'absolute'
+      w = viewportW()
+      h = viewportH()
+      @$el.css
+        width: w
+        height: h
+        top: $win.scrollTop()
+        left: $win.scrollLeft()
+      @$bg.css
+        width: w
+        height: h
+      @trigger 'resize'
       return this
 
   # ============================================================

@@ -1,4 +1,14 @@
 (function() {
+  var wait;
+
+  wait = function(time) {
+    return $.Deferred(function(defer) {
+      return setTimeout(function() {
+        return defer.resolve();
+      }, time);
+    });
+  };
+
   describe('ns.common', function() {
     return describe('global exports', function() {
       it('should export namespace to global', function() {
@@ -57,6 +67,30 @@
         (expect(res2)).to.be.a('boolean');
         return (expect(res1)).to.be(res2);
       });
+    });
+  });
+
+  describe('ns.winwatcher', function() {
+    var ns;
+    ns = $.DomwinNs;
+    it("should have Winwatcher instance on namespace", function() {
+      return (expect(ns.winwatcher != null)).to.be(true);
+    });
+    it("should fire `resize` event on window's resize", function() {
+      var spy;
+      spy = sinon.spy();
+      ns.winwatcher.on('resize', spy);
+      $(window).resize();
+      return (expect(spy.calledOnce)).to.be(true);
+    });
+    return it("should not invoke already offed callbacks", function() {
+      var spy;
+      spy = sinon.spy();
+      ns.winwatcher.on('resize', spy);
+      $(window).resize();
+      ns.winwatcher.off('resize', spy);
+      $(window).resize();
+      return (expect(spy.calledOnce)).to.be(true);
     });
   });
 
